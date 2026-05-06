@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#EAEAE5">
+<title>CardosoHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Tokens ─── */
+:root {
+  --bg:       #EAEAE5;
+  --s1:       #E2E2DC;
+  --s2:       #D8D8D2;
+  --s3:       #CECEC8;
+  --border:   #C8C8C2;
+  --border2:  #B8B8B2;
+  --text:     #1C1C1A;
+  --muted:    #6B6B64;
+  --faint:    #9A9A92;
+  --accent:   #1C1C1A;       /* editorial: quase preto no claro */
+  --accent-d: #3a3a36;
+  --accent2:  #c0392b;
+  --accent3:  #1a4a7a;
+  --radius:   2px;
+  --nav-h:    68px;
+  --top-h:    52px;
+  --ease:     cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
+
+/* ─── Motion system (from DS) ─── */
+.reveal { opacity: 0; transform: translateY(1.5rem); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+.reveal.in { opacity: 1; transform: translateY(0); }
+.delay-1 { transition-delay: 0.08s; }
+.delay-2 { transition-delay: 0.16s; }
+.delay-3 { transition-delay: 0.24s; }
+.delay-4 { transition-delay: 0.36s; }
+
+/* Text mask reveal */
+.trw { overflow: hidden; display: inline-block; vertical-align: bottom; }
+.trc { display: block; transform: translateY(110%); opacity: 0; transition: transform 1.1s var(--ease), opacity 1.1s ease; }
+.reveal-text .trc { transform: translateY(0); opacity: 1; }
+
+/* ─── SETUP ─── */
+#setup {
+  position: fixed; inset: 0; z-index: 900;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+
+.setup-top {
+  padding: 48px 28px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 32px;
+}
+
+.setup-eyebrow {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); font-family: monospace;
+  margin-bottom: 20px;
+}
+
+.setup-wordmark {
+  font-size: 52px; font-weight: 700;
+  letter-spacing: -0.04em; line-height: 1;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.setup-wordmark em { color: var(--text); font-style: normal; }
+
+.setup-sub {
+  font-size: 13px; color: var(--muted);
+  font-weight: 400; line-height: 1.5;
+}
+
+.setup-form { padding: 32px 28px 60px; }
+
+.sf-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); display: block;
+  margin-bottom: 10px; font-family: monospace;
+}
+
+.sf-input {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 24px;
+  transition: border-color 0.25s;
+  -webkit-appearance: none;
+}
+
+.sf-input:focus { border-color: var(--text); }
+.sf-input::placeholder { color: var(--faint); }
+
+.sf-hint {
+  font-size: 11px; color: var(--muted);
+  margin-top: -16px; margin-bottom: 28px;
+  line-height: 1.6; font-family: monospace;
+}
+
+.sf-hint a { color: var(--text); text-decoration: underline; }
+
+.sf-btn {
+  width: 100%;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  padding: 17px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.sf-btn:active { background: #3a3a36; transform: scale(0.98); }
+
+/* ─── APP SHELL ─── */
+#app { display: none; position: fixed; inset: 0; flex-direction: column; }
+
+/* TOP BAR */
+.topbar {
+  height: var(--top-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; z-index: 50;
+}
+
+.topbar-logo {
+  font-size: 16px; font-weight: 700;
+  letter-spacing: -0.03em; color: var(--text);
+}
+
+.topbar-logo em { color: var(--text); font-style: normal; }
+
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.topbar-pill {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); font-family: monospace;
+}
+
+/* PAGES */
+.pages { flex: 1; overflow: hidden; position: relative; }
+
+.page {
+  position: absolute; inset: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 24px 20px calc(var(--nav-h) + 28px);
+  opacity: 0; pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+.page.active { opacity: 1; pointer-events: all; transform: translateY(0); }
+#page-chat { padding: 0; display: flex; flex-direction: column; }
+
+/* ─── BOTTOM NAV ─── */
+.bottom-nav {
+  height: var(--nav-h);
+  display: flex;
+  background: var(--s1);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0; z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ni {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px; cursor: pointer;
+  padding: 10px 4px 6px;
+  position: relative;
+  transition: opacity 0.15s;
+}
+
+.ni:active { opacity: 0.5; }
+
+.ni-line {
+  position: absolute; top: 0; left: 20%; right: 20%;
+  height: 1px; background: var(--text);
+  transform: scaleX(0);
+  transition: transform 0.35s var(--ease);
+  transform-origin: left;
+}
+
+.ni.active .ni-line { transform: scaleX(1); }
+
+.ni-ico {
+  font-size: 18px; line-height: 1;
+  filter: grayscale(1) brightness(1.5);
+  transition: filter 0.25s;
+}
+
+.ni.active .ni-ico { filter: none; }
+
+.ni-lbl {
+  font-size: 9px; font-weight: 600;
+  color: var(--muted); letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.25s;
+}
+
+.ni.active .ni-lbl { color: var(--text); }
+
+/* ─── FAB ─── */
+.fab-back { position: fixed; inset: 0; z-index: 39; display: none; }
+.fab-back.on { display: block; }
+
+.fab { position: fixed; bottom: calc(var(--nav-h) + 16px); right: 20px; z-index: 40; }
+
+.fab-main {
+  width: 52px; height: 52px;
+  background: var(--text);
+  border: none; border-radius: var(--radius);
+  font-size: 24px; font-weight: 300;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  transition: transform 0.3s var(--ease), box-shadow 0.2s;
+}
+
+.fab-main.on { transform: rotate(45deg); box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+.fab-main:active { transform: scale(0.9); }
+
+.fab-menu {
+  position: absolute; bottom: 60px; right: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  opacity: 0; pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+.fab-menu.on { opacity: 1; pointer-events: all; transform: translateY(0); }
+
+.fab-row { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+
+.fab-tag {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text);
+  background: var(--s2); border: 1px solid var(--border2);
+  padding: 5px 12px; border-radius: var(--radius);
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  font-family: monospace;
+}
+
+.fab-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, background 0.2s;
+}
+
+.fab-btn:active { transform: scale(0.88); }
+.fab-btn.t { background: var(--s2); }
+.fab-btn.f { background: var(--s3); border-color: var(--border2); }
+.fab-btn.a { background: var(--s3); border-color: var(--border2); }
+
+/* ─── PAGE: NOTAS ─── */
+.page-eyebrow {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); font-family: monospace;
+  margin-bottom: 6px;
+}
+
+.page-h1 {
+  font-size: 36px; font-weight: 700;
+  letter-spacing: -0.03em; line-height: 1;
+  margin-bottom: 24px;
+}
+
+.page-h1 em { color: var(--text); font-style: normal; }
+
+/* chips */
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 24px; }
+.chips::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex-shrink: 0;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; border: 1px solid var(--border2);
+  background: transparent; color: var(--muted);
+  transition: all 0.2s; white-space: nowrap;
+  font-family: monospace;
+}
+
+.chip.on { background: var(--s3); color: var(--text); border-color: var(--faint); }
+
+/* nota card */
+.nc {
+  border-top: 1px solid var(--border);
+  padding: 18px 0;
+  cursor: default;
+  transition: background 0.3s;
+  animation: fadeSlide 0.4s var(--ease) both;
+}
+
+@keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.nc:first-child { border-top: none; }
+
+.nc-meta-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.nc-badge {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: monospace;
+  display: flex; align-items: center; gap: 5px;
+}
+
+.bl { color: var(--accent3); }
+.bp { color: #6cffd4; }
+.bt { color: var(--accent2); }
+.bg2 { color: #ffc864; }
+
+.nc-acts { display: flex; gap: 6px; }
+
+.nc-act {
+  width: 28px; height: 28px;
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 12px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.nc-act:active { background: var(--s3); }
+
+.nc-title {
+  font-size: 17px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.3;
+  margin-bottom: 8px; color: var(--text);
+}
+
+.nc-body {
+  font-size: 13px; color: var(--muted);
+  line-height: 1.65; margin-bottom: 12px;
+}
+
+.nc-foot {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.nc-date {
+  font-size: 10px; color: var(--faint);
+  font-family: monospace; letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 5px;
+}
+
+.nc-ask {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text); background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 5px 12px; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: monospace;
+}
+
+.nc-ask:active { background: var(--s2); }
+
+.nc-ai-wrap {
+  margin-top: 12px;
+  background: rgba(28,28,26,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: none;
+  animation: fadeSlide 0.3s var(--ease);
+}
+
+.nc-ai-wrap.on { display: block; }
+
+.nc-ai-lbl {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text); margin-bottom: 8px;
+  font-family: monospace;
+}
+
+.nc-ai-txt { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+/* divider */
+.section-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px;
+}
+
+.section-divider-line { flex: 1; height: 1px; background: var(--border); }
+.section-divider-txt {
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); font-family: monospace; flex-shrink: 0;
+}
+
+/* count badge */
+.count-badge {
+  font-size: 10px; font-weight: 600; font-family: monospace;
+  color: var(--muted); letter-spacing: 0.08em;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 3px 8px;
+}
+
+/* empty */
+.empty {
+  padding: 64px 0; text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+.empty-ico { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
+
+.empty-title {
+  font-size: 20px; font-weight: 700;
+  letter-spacing: -0.02em; margin-bottom: 8px;
+}
+
+.empty-sub { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ─── PAGE: CHAT ─── */
+.chat-hdr {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.chat-hdr-title {
+  font-size: 18px; font-weight: 700;
+  letter-spacing: -0.02em; margin-bottom: 3px;
+}
+
+.chat-hdr-sub {
+  font-size: 10px; color: var(--muted);
+  font-family: monospace; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.chat-msgs {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  padding-bottom: calc(var(--nav-h) + 72px);
+}
+
+.msg {
+  max-width: 85%; font-size: 14px; line-height: 1.65;
+  animation: fadeSlide 0.25s var(--ease);
+  word-break: break-word;
+}
+
+.mu {
+  align-self: flex-end;
+  background: var(--text); color: var(--bg);
+  padding: 11px 16px;
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+
+.ma {
+  align-self: flex-start;
+  background: var(--s2); border: 1px solid var(--border);
+  color: var(--text); padding: 11px 16px;
+  border-radius: var(--radius);
+}
+
+.ma strong { color: var(--text); }
+
+.mt {
+  align-self: flex-start;
+  background: var(--s2); border: 1px solid var(--border);
+  padding: 12px 16px; border-radius: var(--radius);
+}
+
+.chat-ftr {
+  position: fixed; bottom: var(--nav-h); left: 0; right: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 12px 20px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  display: none; gap: 10px; align-items: flex-end; z-index: 30;
+}
+
+.chat-ftr.on { display: flex; }
+
+.chat-ta {
+  flex: 1;
+  background: var(--s2); border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  color: var(--text); font-family: 'Inter', sans-serif;
+  font-size: 15px; outline: none;
+  resize: none; max-height: 100px; line-height: 1.5;
+  transition: border-color 0.2s; -webkit-appearance: none;
+}
+
+.chat-ta:focus { border-color: var(--text); }
+.chat-ta::placeholder { color: var(--faint); }
+
+.chat-send {
+  width: 44px; height: 44px;
+  background: var(--text); border: none;
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px; color: var(--bg);
+  flex-shrink: 0;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.chat-send:active { transform: scale(0.9); background: #3a3a36; }
+
+/* ─── PAGE: CATS ─── */
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin-bottom: 24px; }
+
+.cat-card {
+  background: var(--s1);
+  padding: 22px 18px;
+  cursor: pointer;
+  transition: background 0.3s var(--ease);
+  position: relative; overflow: hidden;
+}
+
+.cat-card:active { background: var(--s2); }
+
+.cat-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  transition: height 0.3s var(--ease);
+}
+
+.cat-card.lideranca .cat-accent { background: var(--accent3); }
+.cat-card.processos .cat-accent { background: #6cffd4; }
+.cat-card.tecnico   .cat-accent { background: var(--accent2); }
+.cat-card.geral     .cat-accent { background: #ffc864; }
+
+.cat-emo { font-size: 28px; margin-bottom: 14px; display: block; }
+
+.cat-nm {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: -0.01em; margin-bottom: 5px;
+}
+
+.cat-ct {
+  font-size: 10px; color: var(--muted);
+  font-family: monospace; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.back-btn {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text); cursor: pointer;
+  margin-bottom: 24px; font-family: monospace;
+}
+
+/* ─── PAGE: CONFIG ─── */
+.cfg-section { margin-bottom: 20px; }
+
+.cfg-section-label {
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted); font-family: monospace;
+  margin-bottom: 8px; padding: 0 2px;
+}
+
+.cfg-block { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+
+.cfg-item {
+  padding: 15px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+  gap: 12px;
+}
+
+.cfg-item:active { background: var(--s2); }
+.cfg-item:last-child { border-bottom: none; }
+
+.cfg-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cfg-ico { font-size: 18px; flex-shrink: 0; }
+.cfg-title { font-size: 14px; font-weight: 500; }
+.cfg-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.cfg-arr { color: var(--muted); font-size: 16px; flex-shrink: 0; }
+
+.danger { color: var(--accent2) !important; }
+
+.cfg-footer {
+  padding: 32px 0 0;
+  font-size: 10px; color: var(--muted);
+  font-family: monospace; line-height: 1.8;
+  letter-spacing: 0.04em;
+}
+
+/* ─── MODALS ─── */
+.mo {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200; display: none;
+  align-items: flex-end;
+}
+
+.mo.on { display: flex; }
+
+.modal {
+  background: var(--s1);
+  border-top: 1px solid var(--border2);
+  border-left: 1px solid var(--border2);
+  border-right: 1px solid var(--border2);
+  border-radius: 0;
+  padding: 24px 24px 40px;
+  width: 100%; max-height: 94dvh;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  animation: modalUp 0.32s var(--ease);
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+
+@keyframes modalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modal-drag {
+  width: 32px; height: 3px;
+  background: var(--border2); border-radius: 999px;
+  margin: 0 auto 24px;
+}
+
+.modal-title {
+  font-size: 22px; font-weight: 700;
+  letter-spacing: -0.03em; margin-bottom: 24px;
+}
+
+.fl {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); display: block;
+  margin-bottom: 8px; font-family: monospace;
+}
+
+.fi, .fta, .fsel {
+  width: 100%;
+  background: var(--s2); border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 14px 16px; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 15px;
+  outline: none; margin-bottom: 18px;
+  transition: border-color 0.2s; -webkit-appearance: none;
+}
+
+.fi:focus, .fta:focus, .fsel:focus { border-color: var(--text); }
+.fta { resize: none; min-height: 110px; line-height: 1.6; }
+.fsel option { background: var(--s2); }
+
+/* upload zone */
+.upload-z {
+  background: var(--s2); border: 1px dashed var(--border2);
+  border-radius: var(--radius); padding: 28px;
+  text-align: center; cursor: pointer;
+  margin-bottom: 18px; transition: border-color 0.2s;
+}
+
+.upload-z:active { border-color: var(--text); }
+.upload-z-ico { font-size: 28px; margin-bottom: 8px; }
+.upload-z-txt { font-size: 12px; color: var(--muted); line-height: 1.5; font-family: monospace; letter-spacing: 0.04em; }
+
+.img-prev { width: 100%; border-radius: var(--radius); margin-bottom: 18px; display: none; }
+
+/* modal buttons */
+.modal-btns { display: flex; gap: 10px; margin-top: 6px; }
+
+.btn-cancel {
+  flex: 1; background: var(--s2);
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  padding: 15px; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 12px;
+  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: background 0.15s;
+}
+
+.btn-cancel:active { background: var(--s3); }
+
+.btn-save {
+  flex: 2; background: var(--text); color: var(--bg);
+  border: none; border-radius: var(--radius);
+  padding: 15px; font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.15s, background 0.15s;
+}
+
+.btn-save:disabled { opacity: 0.3; }
+.btn-save:not(:disabled):active { background: var(--accent-d); }
+
+/* ─── AI LOADING ─── */
+.ai-think {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: rgba(28,28,26,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  font-size: 11px; color: var(--text);
+  font-family: monospace; letter-spacing: 0.06em;
+}
+
+.dots { display: flex; gap: 4px; }
+
+.dots span {
+  width: 5px; height: 5px;
+  background: var(--accent); border-radius: 50%;
+  animation: dp 1.1s infinite;
+}
+
+.dots span:nth-child(2) { animation-delay: .18s; }
+.dots span:nth-child(3) { animation-delay: .36s; }
+
+@keyframes dp { 0%,60%,100% { opacity:.2; transform:scale(.7); } 30% { opacity:1; transform:scale(1); } }
+
+.ai-box {
+  background: rgba(28,28,26,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 18px;
+  font-size: 13px; line-height: 1.7; display: none;
+}
+
+.ai-box.on { display: block; animation: fadeSlide .25s var(--ease); }
+
+.ai-lbl {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text); margin-bottom: 8px; font-family: monospace;
+}
+
+/* ─── AUDIO MODAL ─── */
+.audio-c { display: flex; flex-direction: column; align-items: center; padding: 16px 0 28px; }
+
+.rec-timer {
+  font-size: 56px; font-weight: 700;
+  letter-spacing: -0.04em; line-height: 1;
+  color: var(--text); display: none; margin-bottom: 8px;
+}
+
+.rec-timer.on { display: block; }
+
+.rec-status {
+  font-size: 11px; color: var(--muted);
+  font-family: monospace; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 28px;
+  text-align: center;
+}
+
+.rec-btn {
+  width: 72px; height: 72px;
+  border-radius: 50%; border: none;
+  background: #c0392b;
+  font-size: 26px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 28px rgba(192,57,43,0.25);
+  transition: transform 0.15s;
+}
+
+.rec-btn:active { transform: scale(0.9); }
+
+.rec-btn.rec { animation: rp 1s var(--ease) infinite; }
+
+@keyframes rp {
+  0%, 100% { box-shadow: 0 8px 28px rgba(192,57,43,0.25); }
+  50%       { box-shadow: 0 8px 40px rgba(192,57,43,0.5); }
+}
+
+.trans-box {
+  background: var(--s2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 14px;
+  font-size: 14px; line-height: 1.65; color: var(--text);
+  min-height: 64px; margin-bottom: 18px;
+  display: none; white-space: pre-wrap;
+  font-family: 'Inter', sans-serif;
+}
+
+.trans-box.on { display: block; animation: fadeSlide .25s var(--ease); }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 14px); left: 50%;
+  transform: translateX(-50%) translateY(56px);
+  background: var(--text); border: 1px solid var(--border2); color: var(--bg);
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; font-family: monospace;
+  z-index: 500; white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.toast.on { transform: translateX(-50%) translateY(0); }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 1px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ SETUP ══════════ -->
+<div id="setup">
+  <div class="setup-top reveal" id="setup-top">
+    <p class="setup-eyebrow">Assistente Pessoal · v3.0</p>
+    <h1 class="setup-wordmark">Cardoso<em>Hub</em></h1>
+    <p class="setup-sub">O teu assistente de gestão.<br>Notas, formação e contexto sempre contigo.</p>
+  </div>
+
+  <div class="setup-form">
+    <label class="sf-label">Nome</label>
+    <input type="text" id="sn" class="sf-input" placeholder="Ex: Lucas Romero" autocomplete="given-name">
+
+    <!-- API key is handled server-side via Vercel env -->
+
+    <button class="sf-btn" onclick="doSetup()">Entrar →</button>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo">Cardoso<em>Hub</em></div>
+    <div class="topbar-right">
+      <span class="topbar-pill" id="tg"></span>
+    </div>
+  </div>
+
+  <!-- PAGES -->
+  <div class="pages">
+
+    <!-- ── NOTAS ── -->
+    <div class="page active" id="page-notas">
+      <p class="page-eyebrow">Base de Conhecimento</p>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;">
+        <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.03em;line-height:1;">Notas</h1>
+        <span class="count-badge" id="nc">0</span>
+      </div>
+
+      <div class="chips">
+        <div class="chip on" onclick="filt('todas',this)">Todas</div>
+        <div class="chip" onclick="filt('lideranca',this)">Liderança</div>
+        <div class="chip" onclick="filt('processos',this)">Processos</div>
+        <div class="chip" onclick="filt('tecnico',this)">Técnico</div>
+        <div class="chip" onclick="filt('geral',this)">Geral</div>
+      </div>
+
+      <div id="nl"></div>
+    </div>
+
+    <!-- ── CHAT ── -->
+    <div class="page" id="page-chat">
+      <div class="chat-hdr">
+        <div class="chat-hdr-title">Assistente IA</div>
+        <div class="chat-hdr-sub" id="ci">Sem notas no contexto ainda</div>
+      </div>
+      <div class="chat-msgs" id="cm">
+        <div class="msg ma">
+          Olá. Sou o teu assistente de gestão.<br><br>
+          Pergunta-me sobre procedimentos do restaurante, como lidar com a equipa, ou qualquer dúvida do dia a dia. Quanto mais notas adicionares, melhores as respostas.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CATEGORIAS ── -->
+    <div class="page" id="page-cats">
+      <p class="page-eyebrow">Organização</p>
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.03em;margin-bottom:24px;">Categorias</h1>
+      <div class="cat-grid" id="cg"></div>
+      <div id="cd"></div>
+    </div>
+
+    <!-- ── CONFIG ── -->
+    <div class="page" id="page-cfg">
+      <p class="page-eyebrow">Preferências</p>
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.03em;margin-bottom:28px;">Config</h1>
+
+      <div class="cfg-section">
+        <p class="cfg-section-label">Conta</p>
+        <div class="cfg-block">
+          <div class="cfg-item" onclick="editCfg('name')">
+            <div class="cfg-left">
+              <span class="cfg-ico">👤</span>
+              <div><div class="cfg-title">Nome</div><div class="cfg-sub" id="cfg-n">—</div></div>
+            </div>
+            <span class="cfg-arr">›</span>
+          </div>
+          <div class="cfg-item" onclick="editCfg('key')">
+            <div class="cfg-left">
+              <span class="cfg-ico">🔑</span>
+              <div><div class="cfg-title">API Key</div><div class="cfg-sub" id="cfg-k">—</div></div>
+            </div>
+            <span class="cfg-arr">›</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cfg-section">
+        <p class="cfg-section-label">Dados</p>
+        <div class="cfg-block">
+          <div class="cfg-item" onclick="expData()">
+            <div class="cfg-left">
+              <span class="cfg-ico">📤</span>
+              <div><div class="cfg-title">Exportar notas</div><div class="cfg-sub">Backup JSON</div></div>
+            </div>
+            <span class="cfg-arr">›</span>
+          </div>
+          <div class="cfg-item" onclick="document.getElementById('ii').click()">
+            <div class="cfg-left">
+              <span class="cfg-ico">📥</span>
+              <div><div class="cfg-title">Importar notas</div><div class="cfg-sub">Restaurar backup</div></div>
+            </div>
+            <span class="cfg-arr">›</span>
+          </div>
+          <div class="cfg-item" onclick="clearAll()">
+            <div class="cfg-left">
+              <span class="cfg-ico">🗑️</span>
+              <div><div class="cfg-title danger">Apagar tudo</div><div class="cfg-sub">Remove todas as notas</div></div>
+            </div>
+            <span class="cfg-arr">›</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="cfg-footer">
+        CardosoHub · v3.0 · Build 2025<br>
+        Dados locais · GPT-4o Mini + Whisper · OpenAI
+      </p>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="ni active" id="ni-notas" onclick="goPage('notas')">
+      <div class="ni-line"></div>
+      <div class="ni-ico">📝</div>
+      <div class="ni-lbl">Notas</div>
+    </div>
+    <div class="ni" id="ni-chat" onclick="goPage('chat')">
+      <div class="ni-line"></div>
+      <div class="ni-ico">💬</div>
+      <div class="ni-lbl">Chat</div>
+    </div>
+    <div class="ni" id="ni-cats" onclick="goPage('cats')">
+      <div class="ni-line"></div>
+      <div class="ni-ico">📂</div>
+      <div class="ni-lbl">Categorias</div>
+    </div>
+    <div class="ni" id="ni-cfg" onclick="goPage('cfg')">
+      <div class="ni-line"></div>
+      <div class="ni-ico">⚙️</div>
+      <div class="ni-lbl">Config</div>
+    </div>
+  </nav>
+
+  <!-- FAB -->
+  <div class="fab-back" id="fb" onclick="closeFab()"></div>
+  <div class="fab">
+    <div class="fab-menu" id="fm">
+      <div class="fab-row"><span class="fab-tag">Gravar áudio</span><button class="fab-btn a" onclick="openM('audio');closeFab()">🎙️</button></div>
+      <div class="fab-row"><span class="fab-tag">Foto de slide</span><button class="fab-btn f" onclick="openM('foto');closeFab()">📷</button></div>
+      <div class="fab-row"><span class="fab-tag">Nova nota</span><button class="fab-btn t" onclick="openM('nota');closeFab()">✏️</button></div>
+    </div>
+    <button class="fab-main" id="fmb" onclick="togFab()">＋</button>
+  </div>
+
+  <!-- CHAT FOOTER -->
+  <div class="chat-ftr" id="cf">
+    <textarea class="chat-ta" id="chi" placeholder="Escreve a tua pergunta..." rows="1" onkeydown="ckd(event)" oninput="ar(this)"></textarea>
+    <button class="chat-send" onclick="sendMsg()">↑</button>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- NOTA -->
+<div class="mo" id="modal-nota">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">Nova Nota</div>
+    <label class="fl">Título</label>
+    <input type="text" id="nt" class="fi" placeholder="Ex: Modelo SBI de feedback">
+    <label class="fl">Categoria</label>
+    <select id="nc2" class="fsel">
+      <option value="lideranca">Liderança & Pessoas</option>
+      <option value="processos">Processos Internos</option>
+      <option value="tecnico">Técnico / Operacional</option>
+      <option value="geral">Geral</option>
+    </select>
+    <label class="fl">Conteúdo</label>
+    <textarea id="nco" class="fta" placeholder="O que aprendeste..."></textarea>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeM('nota')">Cancelar</button>
+      <button class="btn-save" onclick="saveNota()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOTO -->
+<div class="mo" id="modal-foto">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">Foto de Slide</div>
+    <div class="upload-z" onclick="document.getElementById('fi2').click()">
+      <div class="upload-z-ico">📸</div>
+      <div class="upload-z-txt">Toca para tirar foto<br>ou escolher da galeria</div>
+    </div>
+    <input type="file" id="fi2" accept="image/*" capture="environment" style="display:none" onchange="prevFoto(this)">
+    <img id="fp" class="img-prev">
+    <div id="ft" style="display:none">
+      <div class="ai-think"><div class="dots"><span></span><span></span><span></span></div>GPT-4o a analisar a imagem...</div>
+    </div>
+    <div class="ai-box" id="fr"><div class="ai-lbl">Análise do GPT</div><div id="frt"></div></div>
+    <label class="fl">Categoria</label>
+    <select id="fc" class="fsel">
+      <option value="lideranca">Liderança & Pessoas</option>
+      <option value="processos">Processos Internos</option>
+      <option value="tecnico">Técnico / Operacional</option>
+      <option value="geral">Geral</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeM('foto')">Cancelar</button>
+      <button class="btn-save" id="bsf" onclick="saveFoto()" disabled>Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ÁUDIO -->
+<div class="mo" id="modal-audio">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">Gravar Áudio</div>
+    <div class="audio-c">
+      <div class="rec-timer" id="rt">0:00</div>
+      <div class="rec-status" id="rs">Toca para começar a gravar</div>
+      <button class="rec-btn" id="rb" onclick="togRec()">🎙️</button>
+    </div>
+    <div id="at2" style="display:none">
+      <div class="ai-think"><div class="dots"><span></span><span></span><span></span></div>Whisper a transcrever...</div>
+    </div>
+    <div class="trans-box" id="tb"></div>
+    <label class="fl">Título</label>
+    <input type="text" id="atu" class="fi" placeholder="Ex: Reunião — feedback equipa">
+    <label class="fl">Categoria</label>
+    <select id="ac" class="fsel">
+      <option value="lideranca">Liderança & Pessoas</option>
+      <option value="processos">Processos Internos</option>
+      <option value="tecnico">Técnico / Operacional</option>
+      <option value="geral">Geral</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cancelRec()">Cancelar</button>
+      <button class="btn-save" id="bsa" onclick="saveAudio()" disabled>Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG EDIT -->
+<div class="mo" id="modal-ce">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title" id="cet">Editar</div>
+    <label class="fl" id="cel">Valor</label>
+    <input type="text" id="cei" class="fi">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeM('ce')">Cancelar</button>
+      <button class="btn-save" onclick="saveCfg()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST + IMPORTS -->
+<div class="toast" id="toast"></div>
+<input type="file" id="ii" accept=".json" style="display:none" onchange="impFile(this)">
+
+<!-- ══════════ JS ══════════ -->
+<script>
+/* ── State ── */
+let N=[], cf2='todas', ch=[], cef='', fb64='', fa='', mr=null, ac2=[], ri=null, rs2=0, at2str='';
+const $=id=>document.getElementById(id);
+const ls=(k,v)=>{ if(v!==undefined){localStorage.setItem(k,v);return v;} return localStorage.getItem(k); };
+const fmt=()=>new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  N=JSON.parse(localStorage.getItem('notas')||'[]');
+  // setup reveal
+  setTimeout(()=>{ $('setup-top')&&$('setup-top').classList.add('in'); },120);
+  if(ls('apiKey')&&ls('userName')) showApp();
+  updCfg();
+  // close modals on backdrop
+  document.querySelectorAll('.mo').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });
+});
+
+/* ── Setup ── */
+function doSetup(){
+  const n=$('sn').value.trim();
+  if(!n) return toast('Nome obrigatório');
+  ls('userName',n); showApp();
+}
+
+function showApp(){
+  $('setup').style.display='none';
+  $('app').style.display='flex';
+  const nm=ls('userName')||'';
+  const h=new Date().getHours();
+  const g=h<12?'BOM DIA':h<18?'BOA TARDE':'BOA NOITE';
+  $('tg').textContent=`${g}, ${nm.split(' ')[0].toUpperCase()}`;
+  renderN(); renderCats(); updCfg(); updCI();
+}
+
+/* ── Navigation ── */
+function goPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
+  const pg=$(`page-${p}`), ni=$(`ni-${p}`);
+  if(pg) pg.classList.add('active');
+  if(ni) ni.classList.add('active');
+  $('cf').classList.toggle('on', p==='chat');
+  if(p==='chat') setTimeout(()=>{ const m=$('cm'); m.scrollTop=m.scrollHeight; },100);
+  if(p==='cats') renderCats();
+}
+
+/* ── FAB ── */
+function togFab(){
+  const on=$('fm').classList.contains('on');
+  ['fm','fmb','fb'].forEach(id=>$( id).classList.toggle('on',!on));
+}
+function closeFab(){ ['fm','fmb','fb'].forEach(id=>$(id).classList.remove('on')); }
+
+/* ── Modal helpers ── */
+function openM(n){ $(`modal-${n}`).classList.add('on'); }
+function closeM(n){ $(`modal-${n}`).classList.remove('on'); }
+
+/* ── Label helpers ── */
+const clb=c=>({lideranca:'Liderança',processos:'Processos',tecnico:'Técnico',geral:'Geral'}[c]||c);
+const bdg=c=>({lideranca:'bl',processos:'bp',tecnico:'bt',geral:'bg2'}[c]||'');
+const tico=t=>({foto:'📷',audio:'🎙️',texto:'📝'}[t]||'📝');
+
+/* ── Notas CRUD ── */
+function saveN(){ localStorage.setItem('notas',JSON.stringify(N)); }
+
+function saveNota(){
+  const t=$('nt').value.trim(), co=$('nco').value.trim(), ca=$('nc2').value;
+  if(!t) return toast('Título obrigatório');
+  if(!co) return toast('Conteúdo obrigatório');
+  N.unshift({id:Date.now(),titulo:t,conteudo:co,categoria:ca,tipo:'texto',data:fmt()});
+  saveN(); renderN(); renderCats(); closeM('nota');
+  $('nt').value=''; $('nco').value='';
+  toast('Nota guardada'); updCI();
+}
+
+function delN(id){
+  if(!confirm('Apagar esta nota?')) return;
+  N=N.filter(x=>x.id!==id); saveN(); renderN(); renderCats(); updCI(); toast('Nota apagada');
+}
+
+function filt(f,el){
+  cf2=f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); renderN();
+}
+
+function renderN(){
+  const list=cf2==='todas'?N:N.filter(n=>n.categoria===cf2);
+  $('nc').textContent=`${N.length} nota${N.length!==1?'s':''}`;
+  const el=$('nl');
+  if(!list.length){
+    el.innerHTML=`<div class="empty">
+      <div class="empty-ico">○</div>
+      <div class="empty-title">Sem notas</div>
+      <div class="empty-sub">Toca em + para adicionar<br>a tua primeira nota</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML=list.map((n,i)=>`
+    <div class="nc" style="animation-delay:${i*0.04}s">
+      <div class="nc-meta-row">
+        <span class="nc-badge ${bdg(n.categoria)}">${tico(n.tipo)} ${clb(n.categoria)}</span>
+        <div class="nc-acts">
+          <button class="nc-act" onclick="analyzeN(${n.id})" title="Analisar">✦</button>
+          <button class="nc-act" onclick="delN(${n.id})" title="Apagar">×</button>
+        </div>
+      </div>
+      <div class="nc-title">${n.titulo}</div>
+      <div class="nc-body">${n.conteudo.substring(0,200)}${n.conteudo.length>200?'…':''}</div>
+      <div class="nc-foot">
+        <span class="nc-date">${n.data}</span>
+        <button class="nc-ask" onclick="askN(${n.id})">Perguntar →</button>
+      </div>
+      <div class="nc-ai-wrap" id="ai-${n.id}">
+        <div class="nc-ai-lbl">✦ Análise IA</div>
+        <div class="nc-ai-txt" id="ait-${n.id}"></div>
+      </div>
+    </div>`).join('');
+}
+
+async function analyzeN(id){
+  const n=N.find(x=>x.id===id); if(!n) return;
+  const box=$(`ai-${id}`), txt=$(`ait-${id}`);
+  box.classList.add('on');
+  txt.innerHTML='<div class="dots" style="justify-content:center;padding:8px 0"><span></span><span></span><span></span></div>';
+  try{
+    const r=await fetch('/api/chat',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:400,
+        messages:[{role:'user',content:`Analisa esta nota de formação e dá 2-3 dicas práticas de como aplicar no dia a dia como gestor de restauração. Sê conciso e direto. Nota: "${n.titulo}" — ${n.conteudo}`}]})});
+    const d=await r.json();
+    txt.innerHTML=d.choices[0].message.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  }catch(e){ txt.textContent='Erro: '+e.message; }
+}
+
+function askN(id){
+  const n=N.find(x=>x.id===id); if(!n) return;
+  goPage('chat');
+  $('chi').value=`Explica-me melhor: "${n.titulo}"`;
+  $('chi').focus();
+}
+
+/* ── Foto ── */
+function prevFoto(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    const du=e.target.result; fb64=du.split(',')[1];
+    const mt=file.type;
+    $('fp').src=du; $('fp').style.display='block';
+    $('ft').style.display='block'; $('fr').classList.remove('on');
+    try{
+      const r=await fetch('/api/chat',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1024,
+          messages:[{role:'user',content:[
+            {type:'image_url',image_url:{url:`data:${mt};base64,${fb64}`}},
+            {type:'text',text:'Analisa este slide/imagem de formação. Extrai os pontos-chave e informação relevante em português. Sê conciso e organizado.'}
+          ]}]})});
+      const d=await r.json(); fa=d.choices[0].message.content;
+      $('frt').textContent=fa; $('fr').classList.add('on'); $('bsf').disabled=false;
+    }catch(e){ toast('Erro: '+e.message); }
+    finally{ $('ft').style.display='none'; }
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveFoto(){
+  if(!fa) return;
+  N.unshift({id:Date.now(),titulo:'Foto — '+fmt(),conteudo:fa,categoria:$('fc').value,tipo:'foto',data:fmt()});
+  saveN(); renderN(); renderCats(); closeM('foto');
+  fb64=''; fa=''; $('fp').style.display='none'; $('fr').classList.remove('on'); $('bsf').disabled=true;
+  updCI(); toast('Foto guardada');
+}
+
+/* ── Áudio ── */
+async function togRec(){ mr&&mr.state==='recording'?stopRec():startRec(); }
+
+async function startRec(){
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    ac2=[]; rs2=0;
+    const opts=MediaRecorder.isTypeSupported('audio/webm')?{mimeType:'audio/webm'}:{};
+    mr=new MediaRecorder(s,opts);
+    mr.ondataavailable=e=>{ if(e.data.size>0) ac2.push(e.data); };
+    mr.onstop=async()=>{ s.getTracks().forEach(t=>t.stop()); clearInterval(ri); await transAudio(); };
+    mr.start(1000);
+    $('rb').classList.add('rec'); $('rb').textContent='◼';
+    $('rs').textContent='A gravar — toca para parar';
+    $('rt').classList.add('on');
+    ri=setInterval(()=>{ rs2++; const m=Math.floor(rs2/60),ss=rs2%60; $('rt').textContent=`${m}:${ss.toString().padStart(2,'0')}`; },1000);
+  }catch(e){ toast('Sem acesso ao microfone'); }
+}
+
+function stopRec(){
+  if(mr&&mr.state!=='inactive'){
+    mr.stop(); $('rb').classList.remove('rec'); $('rb').textContent='🎙️';
+    $('rs').textContent='A processar...'; $('rt').classList.remove('on');
+  }
+}
+
+async function transAudio(){
+  if(!ac2.length) return;
+  $('at2').style.display='block';
+  try{
+    const mt=ac2[0].type||'audio/webm';
+    const ext=mt.includes('mp4')?'mp4':mt.includes('ogg')?'ogg':'webm';
+    const blob=new Blob(ac2,{type:mt});
+    const fd=new FormData(); fd.append('file',blob,`audio.${ext}`); fd.append('model','whisper-1'); fd.append('language','pt');
+    const r=await fetch('/api/whisper',{method:'POST',body:fd});
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message);}
+    const d=await r.json(); at2str=d.text;
+    const tb=$('tb'); tb.textContent=at2str; tb.classList.add('on');
+    $('bsa').disabled=false; $('rs').textContent='Transcrição concluída';
+  }catch(e){ toast('Erro: '+e.message); $('rs').textContent='Erro — tenta novamente'; }
+  finally{ $('at2').style.display='none'; }
+}
+
+function saveAudio(){
+  if(!at2str) return;
+  const t=$('atu').value.trim()||'Áudio — '+fmt();
+  N.unshift({id:Date.now(),titulo:t,conteudo:at2str,categoria:$('ac').value,tipo:'audio',data:fmt()});
+  saveN(); renderN(); renderCats(); cancelRec(); updCI(); toast('Áudio guardado');
+}
+
+function cancelRec(){
+  if(mr&&mr.state==='recording') mr.stop();
+  clearInterval(ri); mr=null; ac2=[]; at2str=''; rs2=0;
+  $('rb').classList.remove('rec'); $('rb').textContent='🎙️';
+  $('rs').textContent='Toca para começar a gravar';
+  $('rt').textContent='0:00'; $('rt').classList.remove('on');
+  const tb=$('tb'); tb.textContent=''; tb.classList.remove('on');
+  $('atu').value=''; $('bsa').disabled=true; $('at2').style.display='none';
+  closeM('audio');
+}
+
+/* ── Chat ── */
+function updCI(){
+  const el=$('ci');
+  if(el) el.textContent=N.length>0?`${N.length} nota${N.length!==1?'s':''} no contexto`:'Sem notas no contexto ainda';
+}
+
+async function sendMsg(){
+  const inp=$('chi'); const msg=inp.value.trim(); if(!msg) return;
+  inp.value=''; inp.style.height='auto';
+  addM(msg,'u'); const think=addThink();
+  const ctx=N.length>0?`\n\nNotas de formação disponíveis:\n${N.map(n=>`[${clb(n.categoria)}] ${n.titulo}: ${n.conteudo}`).join('\n\n')}`:'';
+  const sys=`És o assistente pessoal de gestão de ${ls('userName')||'o utilizador'}, gestor numa empresa de restauração (McDonald's). Responde sempre em português. Quando tiveres notas disponíveis, usa-as para fundamentar as respostas. Sê direto, prático e concreto.${ctx}`;
+  ch.push({role:'user',content:msg});
+  if(ch.length>20) ch=ch.slice(-20);
+  try{
+    const r=await fetch('/api/chat',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1024,messages:[{role:'system',content:sys},...ch]})});
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message);}
+    const d=await r.json(); const rep=d.choices[0].message.content;
+    ch.push({role:'assistant',content:rep});
+    think.remove(); addM(rep,'a');
+  }catch(e){ think.remove(); addM('Erro: '+e.message,'a'); }
+}
+
+function addM(txt,t){
+  const msgs=$('cm');
+  const div=document.createElement('div');
+  div.className=`msg m${t}`;
+  div.innerHTML=txt.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight; return div;
+}
+
+function addThink(){
+  const msgs=$('cm');
+  const div=document.createElement('div');
+  div.className='mt';
+  div.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight; return div;
+}
+
+function ckd(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
+function ar(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+
+/* ── Categorias ── */
+function renderCats(){
+  const cats=[
+    {id:'lideranca',n:'Liderança',e:'👥',c:'var(--accent3)'},
+    {id:'processos',n:'Processos',e:'⚙️',c:'#6cffd4'},
+    {id:'tecnico',n:'Técnico',e:'🔧',c:'var(--accent2)'},
+    {id:'geral',n:'Geral',e:'📌',c:'#ffc864'}
+  ];
+  $('cg').innerHTML=cats.map(c=>{
+    const cnt=N.filter(n=>n.categoria===c.id).length;
+    return `<div class="cat-card ${c.id}" onclick="showCat('${c.id}','${c.n}','${c.e}')">
+      <div class="cat-accent"></div>
+      <div class="cat-emo">${c.e}</div>
+      <div class="cat-nm">${c.n}</div>
+      <div class="cat-ct">${cnt} nota${cnt!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function showCat(id,nm,em){
+  const list=N.filter(n=>n.categoria===id);
+  $('cd').innerHTML=`<div class="back-btn" onclick="hideCat()">← Voltar</div>
+    <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.02em;margin-bottom:20px;">${em} ${nm}</h2>`+
+    (!list.length?`<div class="empty"><div class="empty-ico">○</div><div class="empty-sub">Sem notas nesta categoria</div></div>`:
+    list.map(n=>`<div class="nc">
+      <div class="nc-title">${n.titulo}</div>
+      <div class="nc-body">${n.conteudo.substring(0,200)}${n.conteudo.length>200?'…':''}</div>
+      <div class="nc-foot">
+        <span class="nc-date">${tico(n.tipo)} ${n.data}</span>
+        <button class="nc-ask" onclick="askN(${n.id})">Perguntar →</button>
+      </div>
+    </div>`).join(''));
+  $('cg').style.display='none';
+}
+
+function hideCat(){
+  $('cg').style.display='grid';
+  $('cd').innerHTML='';
+}
+
+/* ── Config ── */
+function updCfg(){
+  const n=ls('userName')||'—';
+  const cn=$('cfg-n');
+  if(cn) cn.textContent=n;
+}
+
+function editCfg(f){
+  cef=f;
+  $('cet').textContent='Editar Nome';
+  $('cel').textContent='Novo nome';
+  const i=$('cei'); i.type='text'; i.value=ls('userName')||'';
+  openM('ce');
+}
+
+function saveCfg(){
+  const v=$('cei').value.trim(); if(!v) return toast('Campo vazio');
+  if(cef==='name') ls('userName',v);
+  if(cef==='key') ls('apiKey',v);
+  updCfg(); closeM('ce'); toast('Guardado');
+  if(cef==='name'){ const h=new Date().getHours(), g=h<12?'BOM DIA':h<18?'BOA TARDE':'BOA NOITE'; $('tg').textContent=`${g}, ${v.split(' ')[0].toUpperCase()}`; }
+}
+
+function expData(){
+  const b=new Blob([JSON.stringify({notas:N,exportDate:new Date().toISOString()},null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b); const a=document.createElement('a');
+  a.href=u; a.download='cardosohub-backup.json'; a.click(); URL.revokeObjectURL(u);
+  toast('Exportado');
+}
+
+function impFile(input){
+  const file=input.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.notas&&Array.isArray(d.notas)){
+        N=[...d.notas,...N]; saveN(); renderN(); renderCats(); updCI();
+        toast(`${d.notas.length} notas importadas`);
+      }else{ toast('Ficheiro inválido'); }
+    }catch{ toast('Erro ao importar'); }
+  };
+  r.readAsText(file); input.value='';
+}
+
+function clearAll(){
+  if(!confirm('Apagar TODAS as notas? Irreversível.')) return;
+  N=[]; saveN(); renderN(); renderCats(); updCI(); toast('Dados apagados');
+}
+
+/* ── Toast ── */
+function toast(msg,ms=2500){
+  const el=$('toast'); el.textContent=msg; el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'),ms);
+}
+</script>
+</body>
+</html>
