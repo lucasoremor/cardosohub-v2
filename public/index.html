@@ -481,7 +481,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
   padding: 16px 20px;
   display: flex; flex-direction: column; gap: 12px;
-  padding-bottom: calc(var(--nav-h) + 72px);
+  padding-bottom: 90px;
 }
 
 .msg {
@@ -517,9 +517,9 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   position: fixed; bottom: var(--nav-h); left: 0; right: 0;
   background: var(--bg);
   border-top: 1px solid var(--border);
-  padding: 12px 20px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  display: none; gap: 10px; align-items: flex-end; z-index: 30;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  display: none; gap: 10px; align-items: flex-end; z-index: 45;
 }
 
 .chat-ftr.on { display: flex; }
@@ -1206,13 +1206,20 @@ function goPage(p){
   if(pg) pg.classList.add('active');
   if(ni) ni.classList.add('active');
   const footer = $('cf');
+  const fab = $('fmb');
+  const fabWrap = fab ? fab.closest('.fab') : null;
   if(p==='chat'){
     footer.classList.add('on');
+    // Hide FAB on chat page so it doesn't cover the input
+    if(fabWrap) fabWrap.style.display='none';
+    closeFab();
+    setTimeout(()=>{ const m=$('cm'); m.scrollTop=m.scrollHeight; },100);
     setTimeout(()=>$('chi').focus(),300);
   } else {
     footer.classList.remove('on');
+    // Show FAB on other pages
+    if(fabWrap) fabWrap.style.display='';
   }
-  if(p==='chat') setTimeout(()=>{ const m=$('cm'); m.scrollTop=m.scrollHeight; },100);
   if(p==='cats') renderCats();
 }
 
