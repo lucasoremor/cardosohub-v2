@@ -1345,6 +1345,42 @@ function closeM(n){ $(`modal-${n}`).classList.remove('on'); }
 
 /* ── Helpers ── */
 const clb=c=>({lideranca:'Liderança',processos:'Processos',tecnico:'Técnico',geral:'Geral'}[c]||c);
+
+/* ── User ID (stable per device) ── */
+function getUserId(){
+  let uid = ls('user_id');
+  if(!uid){ uid = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36); ls('user_id', uid); }
+  return uid;
+}
+
+/* ── RAG: embed note on save ── */
+async function embedNote(nota){
+  try{
+    await fetch('/api/embed', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ...nota, user_id: getUserId() }) });
+  }catch(e){ console.warn('Embed failed:', e.message); }
+}
+
+/* ── RAG: search relevant notes ── */
+async function searchNotes(query){
+  try{
+    const r = await fetch('/api/search', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ query, user_id: getUserId(), limit: 6 }) });
+    const d = await r.json();
+    return d.notes || [];
+  }catch(e){
+    console.warn('RAG search failed, using all notes:', e.message);
+    return null; // null = fallback to all notes
+  }
+}
+
+/* ── RAG: delete embedding on note delete ── */
+async function deleteEmbed(id){
+  try{
+    await fetch('/api/delete-embed', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, user_id: getUserId() }) });
+  }catch(e){ console.warn('Delete embed failed:', e.message); }
+}
 const bdg=c=>({lideranca:'bl',processos:'bp',tecnico:'bt',geral:'bg2'}[c]||'');
 const tico=t=>({foto:'📷',audio:'🎙️',texto:'📝'}[t]||'📝');
 
@@ -1379,10 +1415,12 @@ async function saveNota(){
   if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
   try{
     const [titulo,categoria]=await Promise.all([aiTitulo(co),aiCategoria(co)]);
-    N.unshift({id:Date.now(),titulo,conteudo:co,categoria,tipo:'texto',data:fmt()});
+    const nota = {id:Date.now(),titulo,conteudo:co,categoria,tipo:'texto',data:fmt()};
+    N.unshift(nota);
     saveN(); renderN(); renderCats(); closeM('nota');
     $('nco').value='';
     toast(`✓ Guardado em ${clb(categoria)}`); updCI();
+    embedNote(nota); // async - don't await
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
   }
@@ -1391,6 +1429,7 @@ async function saveNota(){
 function delN(id){
   if(!confirm('Apagar esta nota?')) return;
   N=N.filter(x=>x.id!==id); saveN(); renderN(); renderCats(); updCI(); toast('Nota apagada');
+  deleteEmbed(id);
 }
 
 function filt(f,el){
@@ -1477,10 +1516,12 @@ async function saveFoto(){
   if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
   try{
     const [titulo,categoria]=await Promise.all([aiTitulo(fa),aiCategoria(fa)]);
-    N.unshift({id:Date.now(),titulo,conteudo:fa,categoria,tipo:'foto',data:fmt()});
+    const notaF = {id:Date.now(),titulo,conteudo:fa,categoria,tipo:'foto',data:fmt()};
+    N.unshift(notaF);
     saveN(); renderN(); renderCats(); closeM('foto');
     fb64=''; fa=''; $('fp').style.display='none'; $('fr').classList.remove('on');
     updCI(); toast(`✓ Guardado em ${clb(categoria)}`);
+    embedNote(notaF);
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
   }
@@ -1539,8 +1580,10 @@ async function saveAudio(){
   if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
   try{
     const [titulo,categoria]=await Promise.all([aiTitulo(at2str),aiCategoria(at2str)]);
-    N.unshift({id:Date.now(),titulo,conteudo:at2str,categoria,tipo:'audio',data:fmt()});
+    const notaA = {id:Date.now(),titulo,conteudo:at2str,categoria,tipo:'audio',data:fmt()};
+    N.unshift(notaA);
     saveN(); renderN(); renderCats(); cancelRec(); updCI(); toast(`✓ Guardado em ${clb(categoria)}`);
+    embedNote(notaA);
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
   }
@@ -1697,8 +1740,38 @@ async function sendMsg(){
   hideSuggestions();
   addM(msg,'u'); const think=addThink();
   const nome=ls('userName')||'amigo';
-  const ctx=N.length>0?`\n\nO que o ${nome} já aprendeu e tem anotado:\n${N.map(n=>`[${clb(n.categoria)}] ${n.titulo}: ${n.conteudo}`).join('\n\n')}`:'';
-  const sys=`És o assistente pessoal do ${nome}, que acabou de ser promovido a gestor num McDonald's e está a aprender o papel.
+
+  // RAG: search relevant notes first
+  let ctx = '';
+  if(N.length > 0){
+    const ragNotes = await searchNotes(msg);
+    if(ragNotes && ragNotes.length > 0){
+      // Use only relevant notes from RAG
+      ctx = `\n\nNotas relevantes do ${nome} para esta pergunta:\n` +
+        ragNotes.map(n => `[${clb(n.categoria)}] ${n.titulo}: ${n.conteudo}`).join('\n\n');
+    } else if(ragNotes === null){
+      // RAG failed - fallback to all notes (max 10)
+      ctx = `\n\nNotas do ${nome}:\n` +
+        N.slice(0,10).map(n => `[${clb(n.categoria)}] ${n.titulo}: ${n.conteudo}`).join('\n\n');
+    }
+    // ragNotes.length === 0 means no relevant notes found - send empty context
+  }
+  const sys=`És o assistente pessoal do ${nome}, gestor num McDonald's.
+
+PERSONALIDADE E TOM:
+Falas como um colega sénior experiente — direto, humano, nunca robótico. Quando respondes, és DETALHADO e COMPLETO. Não cortas a resposta a meio. Explicas o porquê das coisas, não só o quê. Usas exemplos concretos do dia a dia do restaurante. Se a pergunta merece uma resposta longa, dás uma resposta longa — sem medo.
+
+REGRAS DE RESPOSTA:
+- Nunca termines uma resposta de forma abrupta
+- Se estiveres a explicar um processo, explica-o completo do início ao fim
+- Usa parágrafos curtos mas escreve tudo o que é necessário
+- Quando fizeres referência às notas do ${nome}, cita-as de forma natural
+- Faz perguntas de acompanhamento quando fizer sentido
+- Se não souberes algo com certeza, diz claramente — nunca inventes
+- Não tens acesso à internet, por isso para informações atuais sugere onde pesquisar
+
+CONHECIMENTO BASE — procedimentos McDonald's que dominas completamente:
+
 
 Falas como um colega mais experiente — alguém que já passou pelo mesmo e quer ajudar de verdade. Não és um manual nem um robô. És aquele colega que quando o ${nome} te manda mensagem depois do turno, respondes de forma simples, direta e humana.
 
