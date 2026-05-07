@@ -1,9 +1,5 @@
 {
   "name": "cardosohub",
-  "version": "1.0.0",
-  "description": "CardosoHub - Assistente pessoal de gestão",
-  "dependencies": {
-    "form-data": "^4.0.0",
-    "formidable": "^3.5.1"
-  }
+  "version": "2.0.0",
+  "description": "CardosoHub - Assistente pessoal de gestão"
 }
