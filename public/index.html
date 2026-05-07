@@ -1035,7 +1035,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 
   <!-- FAB -->
   <div class="fab-back" id="fb" onclick="closeFab()"></div>
-  <div class="fab">
+  <div class="fab" id="fab-wrap">
     <div class="fab-menu" id="fm">
       <div class="fab-row"><span class="fab-tag">Gravar áudio</span><button class="fab-btn a" onclick="openM('audio');closeFab()">🎙️</button></div>
       <div class="fab-row"><span class="fab-tag">Foto de slide</span><button class="fab-btn f" onclick="openM('foto');closeFab()">📷</button></div>
@@ -1206,19 +1206,18 @@ function goPage(p){
   if(pg) pg.classList.add('active');
   if(ni) ni.classList.add('active');
   const footer = $('cf');
-  const fab = $('fmb');
-  const fabWrap = fab ? fab.closest('.fab') : null;
+  const fabWrap = $('fab-wrap');
   if(p==='chat'){
     footer.classList.add('on');
-    // Hide FAB on chat page so it doesn't cover the input
-    if(fabWrap) fabWrap.style.display='none';
+    if(fabWrap) fabWrap.style.visibility='hidden';
+    if(fabWrap) fabWrap.style.pointerEvents='none';
     closeFab();
     setTimeout(()=>{ const m=$('cm'); m.scrollTop=m.scrollHeight; },100);
-    setTimeout(()=>$('chi').focus(),300);
+    setTimeout(()=>$('chi') && $('chi').focus(),300);
   } else {
     footer.classList.remove('on');
-    // Show FAB on other pages
-    if(fabWrap) fabWrap.style.display='';
+    if(fabWrap) fabWrap.style.visibility='visible';
+    if(fabWrap) fabWrap.style.pointerEvents='auto';
   }
   if(p==='cats') renderCats();
 }
