@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#EAEAE5">
 <title>CardosoHub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="data:application/json,{%22name%22:%22CardosoHub%22,%22short_name%22:%22CardosoHub%22,%22display%22:%22standalone%22,%22background_color%22:%22%23EAEAE5%22,%22theme_color%22:%22%23EAEAE5%22}">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ─── Tokens ─── */
@@ -26,7 +27,7 @@
   --accent2:  #c0392b;
   --accent3:  #1a4a7a;
   --radius:   2px;
-  --nav-h:    68px;
+  --nav-h:    72px;
   --top-h:    52px;
   --ease:     cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -141,10 +142,11 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 .topbar {
   height: var(--top-h);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 24px;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0; z-index: 50;
+  padding-top: env(safe-area-inset-top);
 }
 
 .topbar-logo {
@@ -175,7 +177,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 }
 
 .page.active { opacity: 1; pointer-events: all; transform: translateY(0); }
-#page-chat { padding: 0; display: flex; flex-direction: column; }
+#page-chat { padding: 0 !important; display: flex; flex-direction: column; overflow: hidden; }
 
 /* ─── BOTTOM NAV ─── */
 .bottom-nav {
@@ -191,9 +193,11 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 5px; cursor: pointer;
-  padding: 10px 4px 6px;
+  padding: 10px 8px 6px;
   position: relative;
-  transition: opacity 0.15s;
+  margin: 6px 4px;
+  border-radius: 12px;
+  transition: background 0.2s var(--ease);
 }
 
 .ni:active { opacity: 0.5; }
@@ -207,14 +211,16 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 }
 
 .ni.active .ni-line { transform: scaleX(1); }
+.ni.active { background: rgba(28,28,26,0.04); border-radius: 12px; }
 
 .ni-ico {
-  font-size: 18px; line-height: 1;
-  filter: grayscale(1) brightness(1.5);
-  transition: filter 0.25s;
+  width: 22px; height: 22px;
+  color: var(--muted);
+  transition: color 0.25s var(--ease), transform 0.25s var(--ease);
+  display: flex; align-items: center; justify-content: center;
 }
 
-.ni.active .ni-ico { filter: none; }
+.ni.active .ni-ico { color: var(--text); transform: translateY(-1px); }
 
 .ni-lbl {
   font-size: 9px; font-weight: 600;
@@ -234,8 +240,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 .fab-main {
   width: 52px; height: 52px;
   background: var(--text);
-  border: none; border-radius: var(--radius);
-  font-size: 24px; font-weight: 300;
+  border: none; border-radius: 16px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   color: var(--bg);
@@ -244,6 +249,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 }
 
 .fab-main.on { transform: rotate(45deg); box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+.fab-main svg { transition: inherit; }
 .fab-main:active { transform: scale(0.9); }
 
 .fab-menu {
@@ -521,7 +527,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 .chat-ta {
   flex: 1;
   background: var(--s2); border: 1px solid var(--border2);
-  border-radius: var(--radius);
+  border-radius: 14px;
   padding: 12px 14px;
   color: var(--text); font-family: 'Inter', sans-serif;
   font-size: 15px; outline: none;
@@ -533,11 +539,11 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 .chat-ta::placeholder { color: var(--faint); }
 
 .chat-send {
-  width: 44px; height: 44px;
+  width: 42px; height: 42px;
   background: var(--text); border: none;
-  border-radius: var(--radius);
+  border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 16px; color: var(--bg);
+  cursor: pointer; color: var(--bg);
   flex-shrink: 0;
   transition: transform 0.15s, background 0.15s;
 }
@@ -899,9 +905,17 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
         <div class="chat-hdr-sub" id="ci">Sem notas no contexto ainda</div>
       </div>
       <div class="chat-msgs" id="cm">
-        <div class="msg ma">
-          Olá. Sou o teu assistente de gestão.<br><br>
-          Pergunta-me sobre procedimentos do restaurante, como lidar com a equipa, ou qualquer dúvida do dia a dia. Quanto mais notas adicionares, melhores as respostas.
+        <div class="msg ma">Olá, sou o teu assistente de gestão do CardosoHub. Podes perguntar-me sobre procedimentos do restaurante, como treinar a equipa, lidar com situações difíceis, ou qualquer dúvida do dia a dia.</div>
+        <div class="chat-suggestions" id="suggestions">
+          <div class="sug-label">Sugestões rápidas</div>
+          <div class="sug-chips">
+            <button class="sug-chip" onclick="quickAsk(this)">Como dar feedback a um funcionário?</button>
+            <button class="sug-chip" onclick="quickAsk(this)">Procedimento de fecho do restaurante</button>
+            <button class="sug-chip" onclick="quickAsk(this)">Como treinar um novo funcionário?</button>
+            <button class="sug-chip" onclick="quickAsk(this)">Lidar com reclamação de cliente</button>
+            <button class="sug-chip" onclick="quickAsk(this)">Procedimento de segurança contra incêndio</button>
+            <button class="sug-chip" onclick="quickAsk(this)">Como usar a fritadeira corretamente?</button>
+          </div>
         </div>
       </div>
     </div>
@@ -978,22 +992,43 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   <nav class="bottom-nav">
     <div class="ni active" id="ni-notas" onclick="goPage('notas')">
       <div class="ni-line"></div>
-      <div class="ni-ico">📝</div>
+      <div class="ni-ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
       <div class="ni-lbl">Notas</div>
     </div>
     <div class="ni" id="ni-chat" onclick="goPage('chat')">
       <div class="ni-line"></div>
-      <div class="ni-ico">💬</div>
+      <div class="ni-ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
       <div class="ni-lbl">Chat</div>
     </div>
     <div class="ni" id="ni-cats" onclick="goPage('cats')">
       <div class="ni-line"></div>
-      <div class="ni-ico">📂</div>
+      <div class="ni-ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
       <div class="ni-lbl">Categorias</div>
     </div>
     <div class="ni" id="ni-cfg" onclick="goPage('cfg')">
       <div class="ni-line"></div>
-      <div class="ni-ico">⚙️</div>
+      <div class="ni-ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
       <div class="ni-lbl">Config</div>
     </div>
   </nav>
@@ -1006,13 +1041,21 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
       <div class="fab-row"><span class="fab-tag">Foto de slide</span><button class="fab-btn f" onclick="openM('foto');closeFab()">📷</button></div>
       <div class="fab-row"><span class="fab-tag">Nova nota</span><button class="fab-btn t" onclick="openM('nota');closeFab()">✏️</button></div>
     </div>
-    <button class="fab-main" id="fmb" onclick="togFab()">＋</button>
+    <button class="fab-main" id="fmb" onclick="togFab()">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
   </div>
 
   <!-- CHAT FOOTER -->
   <div class="chat-ftr" id="cf">
     <textarea class="chat-ta" id="chi" placeholder="Escreve a tua pergunta..." rows="1" onkeydown="ckd(event)" oninput="ar(this)"></textarea>
-    <button class="chat-send" onclick="sendMsg()">↑</button>
+    <button class="chat-send" onclick="sendMsg()">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+  </svg>
+</button>
   </div>
 
 </div><!-- /app -->
@@ -1162,7 +1205,13 @@ function goPage(p){
   const pg=$(`page-${p}`), ni=$(`ni-${p}`);
   if(pg) pg.classList.add('active');
   if(ni) ni.classList.add('active');
-  $('cf').classList.toggle('on', p==='chat');
+  const footer = $('cf');
+  if(p==='chat'){
+    footer.classList.add('on');
+    setTimeout(()=>$('chi').focus(),300);
+  } else {
+    footer.classList.remove('on');
+  }
   if(p==='chat') setTimeout(()=>{ const m=$('cm'); m.scrollTop=m.scrollHeight; },100);
   if(p==='cats') renderCats();
 }
@@ -1349,7 +1398,7 @@ function saveAudio(){
 function cancelRec(){
   if(mr&&mr.state==='recording') mr.stop();
   clearInterval(ri); mr=null; ac2=[]; at2str=''; rs2=0;
-  $('rb').classList.remove('rec'); $('rb').textContent='🎙️';
+  $('rb').classList.remove('rec'); $('rb').querySelector('span')||($('rb').style.opacity='1');
   $('rs').textContent='Toca para começar a gravar';
   $('rt').textContent='0:00'; $('rt').classList.remove('on');
   const tb=$('tb'); tb.textContent=''; tb.classList.remove('on');
@@ -1366,9 +1415,44 @@ function updCI(){
 async function sendMsg(){
   const inp=$('chi'); const msg=inp.value.trim(); if(!msg) return;
   inp.value=''; inp.style.height='auto';
+  hideSuggestions();
   addM(msg,'u'); const think=addThink();
   const ctx=N.length>0?`\n\nNotas de formação disponíveis:\n${N.map(n=>`[${clb(n.categoria)}] ${n.titulo}: ${n.conteudo}`).join('\n\n')}`:'';
-  const sys=`És o assistente pessoal de gestão de ${ls('userName')||'o utilizador'}, gestor numa empresa de restauração (McDonald's). Responde sempre em português. Quando tiveres notas disponíveis, usa-as para fundamentar as respostas. Sê direto, prático e concreto.${ctx}`;
+  const nome = ls('userName') || 'o utilizador';
+  const sys = `És o CardosoHub, assistente pessoal de gestão de ${nome}, que é gestor/treinador numa empresa de restauração rápida (McDonald's).
+
+PERSONALIDADE: Direto, prático, como um colega experiente. Nunca robótico. Usa exemplos concretos. Responde SEMPRE em português.
+
+O TEU PAPEL: Ajudas ${nome} em dois domínios principais:
+
+1. OPERAÇÕES DO RESTAURANTE:
+- Procedimentos de abertura e fecho
+- Segurança e higiene (HACCP, EPI, escorregões/quedas, incêndios)
+- Estações de trabalho: chapa (10:1 e 4:1), fritadeira, café da manhã, ambientação
+- Gestão de caixa, dinheiro, Drive-Thru
+- Hospitalidade e atendimento ao cliente
+- UHC, monitores PLS/Look & Cook, tempos de espera
+
+2. GESTÃO DE PESSOAS:
+- Como treinar e verificar novos funcionários (processo 3 etapas: autoguiado → ombro a ombro → verificação)
+- Feedback usando modelo SBI (Situação, Comportamento, Impacto)
+- A "Promessa de Fazer": Fazer Bem, Fazer Especial, Fazer Rápido
+- Valores McDonald's: Servir, Inclusão, Integridade, Comunidade, Família
+- Como lidar com conflitos, desmotivação, absentismo
+- Reforço positivo e coaching
+
+PROCEDIMENTOS QUE CONHECES:
+- Fritadeira: decidir → selecionar cesta → fritar → drenar 5-10s → transferir para UHC → temporizador. Filtrar óleo com "FLTR NOW". Esperar 30s entre cestas na mesma cuba.
+- Chapa: Decidir (Monitor/PLS) → Colocar (luvas azuis, hambúrgueres 10:1 ou 4:1) → Grelhar → Condimentar → Remover → Limpar (raspador + rodo após cada rodada)
+- Segurança: Nunca entrar sozinho no restaurante. Em caso de roubo: manter calma, cooperar, notas mentais do assaltante. CO2: sair da área imediatamente.
+- Abertura: Chegar com outros, nunca entrar sozinho, aguardar desativação do alarme.
+- Dinheiro falso: detector de falsificação, manter à vista do cliente, avisar gerente de plantão.
+- Hospitalidade: modelo LAST (Listen, Apologize, Solve, Thank) para reclamações.
+- Ambientação: regra PEPS (Primeiro a Entrar, Primeiro a Sair), datas de validade secundárias, temperatura do queijo mínimo 16°C.
+
+QUANDO TIVERES NOTAS DO UTILIZADOR: usa-as para personalizar as respostas, citando a categoria entre parênteses.
+QUANDO NÃO TIVERES NOTAS: responde com base no teu conhecimento dos procedimentos acima.
+${ctx}`;
   ch.push({role:'user',content:msg});
   if(ch.length>20) ch=ch.slice(-20);
   try{
@@ -1399,6 +1483,19 @@ function addThink(){
 }
 
 function ckd(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
+
+function quickAsk(btn){
+  const q = btn.textContent;
+  $('chi').value = q;
+  hideSuggestions();
+  sendMsg();
+}
+
+function hideSuggestions(){
+  const s=$('suggestions');
+  if(s){ s.style.opacity='0'; s.style.transform='translateY(-8px)';
+    setTimeout(()=>s.style.display='none', 300); }
+}
 function ar(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 
 /* ── Categorias ── */
