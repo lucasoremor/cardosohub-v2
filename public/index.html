@@ -42,6 +42,62 @@
   --ease-spring: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* ─── LIGHT MODE ─── */
+body.light {
+  --bg:        #EAEAE5;
+  --bg2:       #E2E2DC;
+  --glass:     rgba(255,255,255,0.55);
+  --glass-h:   rgba(255,255,255,0.8);
+  --border-t:  rgba(0,0,0,0.1);
+  --border-s:  rgba(0,0,0,0.07);
+  --border-b:  rgba(0,0,0,0.04);
+  --blue:      #0056d6;
+  --blue-glow: rgba(0,86,214,0.2);
+  --blue-dim:  rgba(0,86,214,0.1);
+  --text:      #1C1C1A;
+  --text-70:   rgba(28,28,26,0.7);
+  --text-50:   rgba(28,28,26,0.5);
+  --text-30:   rgba(28,28,26,0.35);
+  --green:     #0d7a52;
+  --orange:    #b45309;
+  --red:       #dc2626;
+  --purple:    #6d28d9;
+}
+body.light { background: #EAEAE5; }
+body.light .blob { opacity: 0.05; }
+body.light .topbar, body.light .bottom-nav, body.light .chat-ftr { background: rgba(234,234,229,0.88); }
+body.light .modal { background: #f0f0eb; }
+body.light .mu { background: linear-gradient(135deg,#0056d6,#0070f3); }
+body.light .ma { background: rgba(255,255,255,0.75); color: rgba(28,28,26,0.85); }
+body.light .mt { background: rgba(255,255,255,0.6); }
+body.light #ni-notas.active { background: rgba(13,122,82,0.08); }
+body.light #ni-chat.active  { background: rgba(0,86,214,0.08); }
+body.light #ni-cats.active  { background: rgba(180,83,9,0.08); }
+body.light #ni-cfg.active   { background: rgba(109,40,217,0.08); }
+body.light .cat-card.lideranca { background: rgba(13,122,82,0.07); border-color: rgba(13,122,82,0.18); }
+body.light .cat-card.processos { background: rgba(0,86,214,0.07); border-color: rgba(0,86,214,0.18); }
+body.light .cat-card.tecnico   { background: rgba(180,83,9,0.07);  border-color: rgba(180,83,9,0.18); }
+body.light .cat-card.geral     { background: rgba(109,40,217,0.07); border-color: rgba(109,40,217,0.18); }
+body.light .cfg-ico-blue   { background: rgba(0,86,214,0.1);   border-color: rgba(0,86,214,0.2); }
+body.light .cfg-ico-green  { background: rgba(13,122,82,0.1);  border-color: rgba(13,122,82,0.2); }
+body.light .cfg-ico-purple { background: rgba(109,40,217,0.1); border-color: rgba(109,40,217,0.2); }
+body.light .cfg-ico-red    { background: rgba(220,38,38,0.1);  border-color: rgba(220,38,38,0.2); }
+body.light .nc-badge.bl { background: rgba(13,122,82,0.1);  border-color: rgba(13,122,82,0.2); }
+body.light .nc-badge.bp { background: rgba(0,86,214,0.1);   border-color: rgba(0,86,214,0.2); }
+body.light .nc-badge.bt { background: rgba(180,83,9,0.1);   border-color: rgba(180,83,9,0.2); }
+body.light .nc-badge.bg2{ background: rgba(109,40,217,0.1); border-color: rgba(109,40,217,0.2); }
+
+/* Theme toggle */
+.theme-toggle {
+  width: 32px; height: 32px;
+  background: var(--glass); border: 1px solid var(--border-s);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px;
+  transition: background 0.2s, transform 0.15s;
+  backdrop-filter: blur(12px); flex-shrink: 0;
+}
+.theme-toggle:active { transform: scale(0.88); }
+
 /* ─── RESET ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
@@ -845,7 +901,10 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
       <div class="topbar-logo">Cardoso<span>Hub</span></div>
       <div class="topbar-sub" id="tg"></div>
     </div>
-    <div class="topbar-ctx" id="ctx-pill"></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="topbar-ctx" id="ctx-pill"></div>
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Mudar tema">🌙</button>
+    </div>
   </div>
 
   <div class="pages">
@@ -1099,12 +1158,29 @@ const fmt=()=>new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short'
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded',()=>{
   N=JSON.parse(localStorage.getItem('notas')||'[]');
+  initTheme();
   setTimeout(()=>{ $('setup-top')&&$('setup-top').classList.add('in'); },120);
   if(ls('userName')) showApp();
   updCfg();
   document.querySelectorAll('.mo').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });
   if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }); }
 });
+
+/* ── Theme ── */
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light');
+  $('theme-btn').textContent = isLight ? '🌕' : '🌙';
+  ls('theme', isLight ? 'light' : 'dark');
+}
+
+function initTheme(){
+  const saved = ls('theme');
+  if(saved === 'light'){
+    document.body.classList.add('light');
+    const btn = $('theme-btn');
+    if(btn) btn.textContent = '🌕';
+  }
+}
 
 /* ── Setup ── */
 function doSetup(){
