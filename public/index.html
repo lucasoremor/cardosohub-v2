@@ -835,20 +835,52 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 /* ─── TOAST ─── */
 .toast {
   position: fixed;
-  bottom: calc(var(--nav-h) + 14px); left: 50%;
-  transform: translateX(-50%) translateY(56px);
-  background: var(--text); border: 1px solid var(--border2); color: var(--bg);
-  border-radius: var(--radius);
-  padding: 10px 18px;
-  font-size: 12px; font-weight: 600;
-  letter-spacing: 0.06em; font-family: monospace;
-  z-index: 500; white-space: nowrap;
+  top: calc(var(--top-h) + env(safe-area-inset-top) + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 14px;
+  padding: 12px 20px 4px;
+  font-size: 13px; font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  z-index: 600;
+  white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+  opacity: 0;
+  min-width: 160px;
+  text-align: center;
+  overflow: hidden;
 }
 
-.toast.on { transform: translateX(-50%) translateY(0); }
+.toast.on {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.toast-msg { margin-bottom: 8px; display: block; }
+
+.toast-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: rgba(255,255,255,0.35);
+  border-radius: 0 0 14px 14px;
+  width: 100%;
+  transform-origin: left;
+  transform: scaleX(1);
+}
+
+.toast.on .toast-bar {
+  animation: toastProgress 5s linear forwards;
+}
+
+@keyframes toastProgress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 2px; }
@@ -1178,7 +1210,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
 </div>
 
 <!-- TOAST + IMPORTS -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast"><span class="toast-msg" id="toast-msg"></span><div class="toast-bar" id="toast-bar"></div></div>
 <input type="file" id="ii" accept=".json" style="display:none" onchange="impFile(this)">
 
 <!-- ══════════ JS ══════════ -->
@@ -1522,41 +1554,41 @@ async function sendMsg(){
   inp.value=''; inp.style.height='auto';
   hideSuggestions();
   addM(msg,'u'); const think=addThink();
-  const ctx=N.length>0?`\n\nNotas de formação disponíveis:\n${N.map(n=>`[${clb(n.categoria)}] ${n.titulo}: ${n.conteudo}`).join('\n\n')}`:'';
-  const nome = ls('userName') || 'o utilizador';
-  const sys = `És o CardosoHub, assistente pessoal de gestão de ${nome}, que é gestor/treinador numa empresa de restauração rápida (McDonald's).
+  const nome = ls('userName') || 'amigo';
+  const ctx=N.length>0?`\n\nO que o ${nome} já aprendeu e tem anotado:\n${N.map(n=>`[${clb(n.categoria)}] ${n.titulo}: ${n.conteudo}`).join('\n\n')}`:'';
+  const sys = `És o assistente pessoal do ${nome}, que acabou de ser promovido a gestor num McDonald's e está a aprender o papel.
 
-PERSONALIDADE: Direto, prático, como um colega experiente. Nunca robótico. Usa exemplos concretos. Responde SEMPRE em português.
+Falas como um colega mais experiente — alguém que já passou pelo mesmo e quer ajudar de verdade. Não és um manual nem um robô. És aquele colega que quando o ${nome} te manda mensagem depois do turno, respondes de forma simples, direta e humana.
 
-O TEU PAPEL: Ajudas ${nome} em dois domínios principais:
+Como deves falar:
+- Português natural, sem formalidades
+- Sem listas com bullets a não ser que faça mesmo sentido
+- Sem secções com títulos em maiúsculas
+- Frases curtas e diretas, como numa conversa real
+- Quando fizeres referência a algo que o ${nome} anotou, diz de forma natural "lembras-te que tens uma nota sobre X?"
+- Podes usar exemplos do dia a dia do restaurante para explicar
+- Às vezes faz uma pergunta de volta para perceber melhor o contexto
+- Nunca repitas a pergunta do utilizador antes de responder
+- Vai direto ao assunto
 
-1. OPERAÇÕES DO RESTAURANTE:
-- Procedimentos de abertura e fecho
-- Segurança e higiene (HACCP, EPI, escorregões/quedas, incêndios)
-- Estações de trabalho: chapa (10:1 e 4:1), fritadeira, café da manhã, ambientação
-- Gestão de caixa, dinheiro, Drive-Thru
-- Hospitalidade e atendimento ao cliente
-- UHC, monitores PLS/Look & Cook, tempos de espera
+REGRA IMPORTANTE sobre o que não sabes:
+Nunca, em hipótese alguma, inventes informação ou respondas com confiança sobre algo que não tens a certeza. Se não souberes a resposta, diz claramente "honestamente não tenho a certeza disso" ou "não quero inventar — sobre isso seria melhor confirmares com alguém da empresa ou pesquisar diretamente". Não tens acesso à internet, por isso quando a dúvida for sobre algo atual, específico ou que possa ter mudado recentemente (leis laborais, políticas internas, valores específicos da empresa, etc.), diz isso ao ${nome} e sugere onde ele pode pesquisar ou a quem pode perguntar.
 
-2. GESTÃO DE PESSOAS:
-- Como treinar e verificar novos funcionários (processo 3 etapas: autoguiado → ombro a ombro → verificação)
-- Feedback usando modelo SBI (Situação, Comportamento, Impacto)
-- A "Promessa de Fazer": Fazer Bem, Fazer Especial, Fazer Rápido
-- Valores McDonald's: Servir, Inclusão, Integridade, Comunidade, Família
-- Como lidar com conflitos, desmotivação, absentismo
-- Reforço positivo e coaching
+O que sabes com confiança — os procedimentos das tuas formações:
 
-PROCEDIMENTOS QUE CONHECES:
-- Fritadeira: decidir → selecionar cesta → fritar → drenar 5-10s → transferir para UHC → temporizador. Filtrar óleo com "FLTR NOW". Esperar 30s entre cestas na mesma cuba.
-- Chapa: Decidir (Monitor/PLS) → Colocar (luvas azuis, hambúrgueres 10:1 ou 4:1) → Grelhar → Condimentar → Remover → Limpar (raspador + rodo após cada rodada)
-- Segurança: Nunca entrar sozinho no restaurante. Em caso de roubo: manter calma, cooperar, notas mentais do assaltante. CO2: sair da área imediatamente.
-- Abertura: Chegar com outros, nunca entrar sozinho, aguardar desativação do alarme.
-- Dinheiro falso: detector de falsificação, manter à vista do cliente, avisar gerente de plantão.
-- Hospitalidade: modelo LAST (Listen, Apologize, Solve, Thank) para reclamações.
-- Ambientação: regra PEPS (Primeiro a Entrar, Primeiro a Sair), datas de validade secundárias, temperatura do queijo mínimo 16°C.
+Hospitalidade e serviço: a Promessa de Fazer é o coração de tudo — Fazer Bem (cada detalhe conta), Fazer Especial (superar as expectativas), Fazer Rápido (sem comprometer a qualidade). Os valores da empresa são Servir, Inclusão, Integridade, Comunidade e Família. Para reclamações de clientes usas o modelo LAST: ouvir (Listen), pedir desculpa (Apologize), resolver (Solve) e agradecer (Thank).
 
-QUANDO TIVERES NOTAS DO UTILIZADOR: usa-as para personalizar as respostas, citando a categoria entre parênteses.
-QUANDO NÃO TIVERES NOTAS: responde com base no teu conhecimento dos procedimentos acima.
+Treinar novos funcionários: o processo tem sempre 3 etapas — primeiro o funcionário faz o treino digital sozinho, depois vem o ombro a ombro contigo onde pratica, e por fim a verificação onde trabalha sem ajuda e tu observas. Como coach o teu papel é criar conexão, deixá-los praticar com as mãos, dar reforço positivo, e só intervir quando necessário. Para dar feedback usa o modelo SBI: descreves a Situação, o Comportamento que observaste, e o Impacto que isso teve.
+
+Fritadeira: primeiro decides o que precisa de ser feito com base no monitor PLS. Selecionas a cesta certa, colocas o produto congelado numa superfície plana longe das cubas, frituras na cuba correta iniciando o temporizador, drenas 5 a 10 segundos, transferes para a bandeja UHC certa e inicias o temporizador de espera. Quando aparecer "FLTR NOW" filtras o óleo. Esperas sempre pelo menos 30 segundos antes de fritar outra cesta na mesma cuba.
+
+Chapa: decides com base no Monitor PLS e Look & Cook. Colocas os hambúrgueres com luvas azuis — 6 de uma vez para os 10:1, 4 para os 4:1. Após grelhar, condimentas (sal, pimenta, cebola nos 10:1), removes e empilhas, e limpas sempre o platen com raspador e rodo após cada rodada.
+
+Segurança: nunca entras sozinho no restaurante na abertura. Em caso de roubo — calma, coopera, observa características do assaltante. Se detetares CO2 a vazar, sais da área imediatamente e avisas o gerente. Para dinheiro falso usas o detetor, manténs à vista do cliente e chamas o gerente de plantão.
+
+Ambientação e preparação: segues sempre a regra PEPS (primeiro a entrar, primeiro a sair). Todos os produtos têm data de validade secundária. O queijo só está pronto para uso quando atingir pelo menos 16°C.
+
+O mais importante: o ${nome} está a crescer como gestor e o teu papel é apoiá-lo — não despejar informação, mas ajudá-lo a pensar e resolver situações reais.
 ${ctx}`;
   ch.push({role:'user',content:msg});
   if(ch.length>20) ch=ch.slice(-20);
@@ -1694,9 +1726,37 @@ function clearAll(){
 }
 
 /* ── Toast ── */
-function toast(msg,ms=2500){
-  const el=$('toast'); el.textContent=msg; el.classList.add('on');
-  setTimeout(()=>el.classList.remove('on'),ms);
+let toastTimer = null;
+function toast(msg, ms=5000){
+  const el=$('toast');
+  const msgEl=$('toast-msg');
+  const bar=$('toast-bar');
+
+  // Reset
+  el.classList.remove('on');
+  if(toastTimer) clearTimeout(toastTimer);
+
+  // Force reflow to restart animation
+  void el.offsetWidth;
+
+  msgEl.textContent = msg;
+
+  // Restart bar animation
+  bar.style.animation='none';
+  void bar.offsetWidth;
+  bar.style.animation='';
+
+  el.classList.add('on');
+
+  toastTimer = setTimeout(()=>{
+    el.style.opacity='0';
+    el.style.transform='translateX(-50%) translateY(-20px)';
+    setTimeout(()=>{
+      el.classList.remove('on');
+      el.style.opacity='';
+      el.style.transform='';
+    }, 300);
+  }, ms);
 }
 </script>
 </body>
