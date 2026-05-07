@@ -183,10 +183,9 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
 
 /* ─── TOPBAR ─── */
 .topbar {
-  height: var(--top-h);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px;
-  padding-top: env(safe-area-inset-top);
+  padding: 10px 20px;
+  padding-top: max(10px, env(safe-area-inset-top));
   height: calc(var(--top-h) + env(safe-area-inset-top));
   background: rgba(5,10,20,0.8);
   backdrop-filter: blur(20px);
@@ -199,6 +198,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
   font-family: 'Montserrat', sans-serif;
   font-size: 18px; font-weight: 800;
   letter-spacing: -0.03em; color: var(--text);
+  line-height: 1.1;
 }
 
 .topbar-logo span {
@@ -208,11 +208,24 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
   background-clip: text;
 }
 
-.topbar-greet {
-  font-size: 10px; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--text-50); font-family: 'JetBrains Mono', monospace;
+.topbar-sub {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-30); font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
 }
+
+.topbar-ctx {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--blue); font-family: 'JetBrains Mono', monospace;
+  background: var(--blue-dim);
+  border: 1px solid rgba(0,123,255,0.25);
+  padding: 4px 10px; border-radius: 20px;
+  display: none;
+}
+
+.topbar-ctx.show { display: block; }
 
 /* ─── PAGES ─── */
 .pages { flex: 1; overflow: hidden; position: relative; }
@@ -448,17 +461,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
 .empty-sub { font-size: 12px; color: var(--text-30); line-height: 1.6; font-family: 'JetBrains Mono', monospace; }
 
 /* ─── CHAT ─── */
-.chat-hdr {
-  padding: 12px 20px 10px;
-  border-bottom: 1px solid var(--border-s);
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(5,10,20,0.5);
-  backdrop-filter: blur(12px);
-}
-
-.chat-hdr-title { font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
-.chat-hdr-sub { font-size: 10px; color: var(--text-30); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; text-transform: uppercase; }
+/* chat-hdr removed */
 
 .chat-msgs {
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -467,7 +470,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
 }
 
 .msg {
-  max-width: 88%; font-size: 15px; line-height: 1.75;
+  max-width: 88%; font-size: 10px; line-height: 1.75;
   animation: fadeUp 0.25s var(--ease-spring);
   word-break: break-word; letter-spacing: -0.01em;
 }
@@ -838,8 +841,11 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
 <!-- ══════ APP ══════ -->
 <div id="app">
   <div class="topbar">
-    <div class="topbar-logo">Cardoso<span>Hub</span></div>
-    <span class="topbar-greet" id="tg"></span>
+    <div>
+      <div class="topbar-logo">Cardoso<span>Hub</span></div>
+      <div class="topbar-sub" id="tg"></div>
+    </div>
+    <div class="topbar-ctx" id="ctx-pill"></div>
   </div>
 
   <div class="pages">
@@ -863,10 +869,6 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
 
     <!-- CHAT -->
     <div class="page" id="page-chat">
-      <div class="chat-hdr">
-        <div class="chat-hdr-title">Assistente IA</div>
-        <div class="chat-hdr-sub" id="ci">Sem notas no contexto</div>
-      </div>
       <div class="chat-msgs" id="cm">
         <div class="msg ma">Olá, sou o teu assistente de gestão do CardosoHub. Podes perguntar-me sobre procedimentos do restaurante, como treinar a equipa, lidar com situações difíceis, ou qualquer dúvida do dia a dia.</div>
         <div class="chat-suggestions" id="suggestions">
@@ -1116,8 +1118,8 @@ function showApp(){
   $('app').style.display='flex';
   const nm=ls('userName')||'';
   const h=new Date().getHours();
-  const g=h<12?'BOM DIA':h<18?'BOA TARDE':'BOA NOITE';
-  $('tg').textContent=`${g}, ${nm.split(' ')[0].toUpperCase()}`;
+  const g=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  $('tg').textContent=`${g}, ${nm.split(' ')[0]}`;
   renderN(); renderCats(); updCfg(); updCI();
 }
 
@@ -1370,8 +1372,14 @@ function cancelRec(){
 
 /* ── Chat ── */
 function updCI(){
-  const el=$('ci');
-  if(el) el.textContent=N.length>0?`${N.length} nota${N.length!==1?'s':''} no contexto`:'Sem notas no contexto';
+  const pill=$('ctx-pill');
+  if(!pill) return;
+  if(N.length>0){
+    pill.textContent=`${N.length} nota${N.length!==1?'s':''} no contexto`;
+    pill.classList.add('show');
+  } else {
+    pill.classList.remove('show');
+  }
 }
 
 async function sendMsg(){
@@ -1513,8 +1521,8 @@ function saveCfg(){
   const v=$('cei').value.trim(); if(!v) return toast('Campo vazio');
   if(cef==='name') ls('userName',v);
   updCfg(); closeM('ce'); toast('Guardado');
-  const h=new Date().getHours(), g=h<12?'BOM DIA':h<18?'BOA TARDE':'BOA NOITE';
-  $('tg').textContent=`${g}, ${v.split(' ')[0].toUpperCase()}`;
+  const h=new Date().getHours(), g=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  $('tg').textContent=`${g}, ${v.split(' ')[0]}`;
 }
 
 function expData(){
