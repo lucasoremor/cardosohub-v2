@@ -1067,13 +1067,10 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
   <div class="modal">
     <div class="modal-drag"></div>
     <div class="modal-title">Nova Nota</div>
-    <label class="fl">Título</label>
-    <input type="text" id="nt" class="fi" placeholder="Ex: Modelo SBI de feedback">
-<label class="fl">Conteúdo</label>
-    <textarea id="nco" class="fta" placeholder="O que aprendeste..."></textarea>
+    <textarea id="nco" class="fta" placeholder="Escreve o que aprendeste... A IA cria o título e escolhe a categoria automaticamente." style="min-height:140px"></textarea>
     <div class="ai-cat-hint">
       <span class="ai-cat-dot"></span>
-      A IA vai escolher a categoria automaticamente
+      Título e categoria gerados automaticamente pela IA
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeM('nota')">Cancelar</button>
@@ -1122,11 +1119,9 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
       <div class="ai-think"><div class="dots"><span></span><span></span><span></span></div>Whisper a transcrever...</div>
     </div>
     <div class="trans-box" id="tb"></div>
-    <label class="fl">Título</label>
-    <input type="text" id="atu" class="fi" placeholder="Ex: Reunião — feedback equipa">
-<div class="ai-cat-hint">
+    <div class="ai-cat-hint">
       <span class="ai-cat-dot"></span>
-      A IA vai escolher a categoria automaticamente
+      Título e categoria gerados automaticamente pela IA
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cancelRec()">Cancelar</button>
@@ -1273,18 +1268,18 @@ Conteúdo: "${texto.substring(0,400)}"`}]})});
 function saveN(){ localStorage.setItem('notas',JSON.stringify(N)); }
 
 async function saveNota(){
-  const t=$('nt').value.trim(), co=$('nco').value.trim();
-  if(!co) return toast('Conteúdo obrigatório');
+  const co=$('nco').value.trim();
+  if(!co) return toast('Escreve o conteúdo primeiro');
   const btn=$('btn-save-nota');
   if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
   try{
     const [titulo, categoria] = await Promise.all([
-      t ? Promise.resolve(t) : aiTitulo(co),
+      aiTitulo(co),
       aiCategoria(co)
     ]);
     N.unshift({id:Date.now(),titulo,conteudo:co,categoria,tipo:'texto',data:fmt()});
     saveN(); renderN(); renderCats(); closeM('nota');
-    $('nt').value=''; $('nco').value='';
+    $('nco').value='';
     toast(`✓ Guardado em ${clb(categoria)}`); updCI();
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
@@ -1446,12 +1441,11 @@ async function transAudio(){
 
 async function saveAudio(){
   if(!at2str) return;
-  const tManual = $('atu').value.trim();
   const btn=$('bsa');
   if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
   try{
     const [titulo, categoria] = await Promise.all([
-      tManual ? Promise.resolve(tManual) : aiTitulo(at2str),
+      aiTitulo(at2str),
       aiCategoria(at2str)
     ]);
     N.unshift({id:Date.now(),titulo,conteudo:at2str,categoria,tipo:'audio',data:fmt()});
@@ -1469,7 +1463,7 @@ function cancelRec(){
   $('rs').textContent='Toca para começar a gravar';
   $('rt').textContent='0:00'; $('rt').classList.remove('on');
   const tb=$('tb'); tb.textContent=''; tb.classList.remove('on');
-  $('atu').value=''; $('bsa').disabled=true; $('at2').style.display='none';
+  $('bsa').disabled=true; $('at2').style.display='none';
   closeM('audio');
 }
 
