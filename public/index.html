@@ -183,7 +183,7 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
 
 .setup-sub { font-size: 13px; color: var(--text-50); line-height: 1.6; font-family: 'JetBrains Mono', monospace; }
 
-.setup-form { padding: 32px 28px 80px; display: flex; flex-direction: column; gap: 0; }
+.setup-form { padding: 32px 28px 80px; display: flex; flex-direction: column; gap: 0; min-height: 240px; opacity: 1 !important; transform: none !important; }
 
 .field-group { margin-bottom: 24px; }
 
@@ -884,11 +884,11 @@ html, body { height: 100%; overflow: hidden; font-family: 'JetBrains Mono', mono
   </div>
 
   <div class="setup-form">
-    <div class="field-group reveal delay-1">
+    <div class="field-group">
       <label class="field-label-lg">O teu nome</label>
       <input type="text" id="sn" class="field-inp" placeholder="Ex: Lucas Romero" autocomplete="given-name">
     </div>
-    <div class="reveal delay-2">
+    <div>
       <button class="btn-primary" onclick="doSetup()">Entrar →</button>
     </div>
   </div>
@@ -1159,7 +1159,7 @@ const fmt=()=>new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short'
 document.addEventListener('DOMContentLoaded',()=>{
   N=JSON.parse(localStorage.getItem('notas')||'[]');
   initTheme();
-  setTimeout(()=>{ $('setup-top')&&$('setup-top').classList.add('in'); },120);
+  setTimeout(()=>{ $('setup-top')&&$('setup-top').classList.add('in'); document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in')); },80);
   if(ls('userName')) showApp();
   updCfg();
   document.querySelectorAll('.mo').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });
