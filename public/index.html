@@ -1069,18 +1069,15 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
     <div class="modal-title">Nova Nota</div>
     <label class="fl">Título</label>
     <input type="text" id="nt" class="fi" placeholder="Ex: Modelo SBI de feedback">
-    <label class="fl">Categoria</label>
-    <select id="nc2" class="fsel">
-      <option value="lideranca">Liderança & Pessoas</option>
-      <option value="processos">Processos Internos</option>
-      <option value="tecnico">Técnico / Operacional</option>
-      <option value="geral">Geral</option>
-    </select>
-    <label class="fl">Conteúdo</label>
+<label class="fl">Conteúdo</label>
     <textarea id="nco" class="fta" placeholder="O que aprendeste..."></textarea>
+    <div class="ai-cat-hint">
+      <span class="ai-cat-dot"></span>
+      A IA vai escolher a categoria automaticamente
+    </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeM('nota')">Cancelar</button>
-      <button class="btn-save" onclick="saveNota()">Guardar</button>
+      <button class="btn-save" id="btn-save-nota" onclick="saveNota()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1100,13 +1097,10 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
       <div class="ai-think"><div class="dots"><span></span><span></span><span></span></div>GPT-4o a analisar a imagem...</div>
     </div>
     <div class="ai-box" id="fr"><div class="ai-lbl">Análise do GPT</div><div id="frt"></div></div>
-    <label class="fl">Categoria</label>
-    <select id="fc" class="fsel">
-      <option value="lideranca">Liderança & Pessoas</option>
-      <option value="processos">Processos Internos</option>
-      <option value="tecnico">Técnico / Operacional</option>
-      <option value="geral">Geral</option>
-    </select>
+<div class="ai-cat-hint">
+      <span class="ai-cat-dot"></span>
+      A IA vai escolher a categoria automaticamente
+    </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeM('foto')">Cancelar</button>
       <button class="btn-save" id="bsf" onclick="saveFoto()" disabled>Guardar</button>
@@ -1130,13 +1124,10 @@ html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; b
     <div class="trans-box" id="tb"></div>
     <label class="fl">Título</label>
     <input type="text" id="atu" class="fi" placeholder="Ex: Reunião — feedback equipa">
-    <label class="fl">Categoria</label>
-    <select id="ac" class="fsel">
-      <option value="lideranca">Liderança & Pessoas</option>
-      <option value="processos">Processos Internos</option>
-      <option value="tecnico">Técnico / Operacional</option>
-      <option value="geral">Geral</option>
-    </select>
+<div class="ai-cat-hint">
+      <span class="ai-cat-dot"></span>
+      A IA vai escolher a categoria automaticamente
+    </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cancelRec()">Cancelar</button>
       <button class="btn-save" id="bsa" onclick="saveAudio()" disabled>Guardar</button>
@@ -1238,17 +1229,66 @@ const clb=c=>({lideranca:'Liderança',processos:'Processos',tecnico:'Técnico',g
 const bdg=c=>({lideranca:'bl',processos:'bp',tecnico:'bt',geral:'bg2'}[c]||'');
 const tico=t=>({foto:'📷',audio:'🎙️',texto:'📝'}[t]||'📝');
 
+
+/* ── AI Auto-categorize ── */
+async function aiCategoria(texto){
+  try{
+    const r = await fetch('/api/chat',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'gpt-4o-mini', max_tokens:20,
+        messages:[{role:'user', content:`Analisa este texto e responde APENAS com uma destas palavras exatas: lideranca, processos, tecnico, geral
+
+lideranca = gestão de pessoas, feedback, treino, motivação, liderança, equipa, coaching
+processos = procedimentos operacionais, abertura, fecho, caixa, drive-thru, atendimento
+tecnico = cozinha, fritadeira, chapa, grelhar, café da manhã, preparação, equipamentos, segurança alimentar
+geral = qualquer outra coisa
+
+Texto: "${texto.substring(0,300)}"`}]})});
+    const d = await r.json();
+    const cat = d.choices[0].message.content.trim().toLowerCase();
+    const valid = ['lideranca','processos','tecnico','geral'];
+    return valid.includes(cat) ? cat : 'geral';
+  }catch(e){
+    return 'geral';
+  }
+}
+
+/* ── AI Auto-title ── */
+async function aiTitulo(texto){
+  try{
+    const r = await fetch('/api/chat',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'gpt-4o-mini', max_tokens:15,
+        messages:[{role:'user', content:`Resume este conteúdo num título curto em português (máximo 6 palavras, sem pontuação no final). Responde APENAS com o título.
+
+Conteúdo: "${texto.substring(0,400)}"`}]})});
+    const d = await r.json();
+    return d.choices[0].message.content.trim().replace(/["'.]/g,'');
+  }catch(e){
+    return 'Nota — ' + new Date().toLocaleDateString('pt-PT');
+  }
+}
+
 /* ── Notas CRUD ── */
 function saveN(){ localStorage.setItem('notas',JSON.stringify(N)); }
 
-function saveNota(){
-  const t=$('nt').value.trim(), co=$('nco').value.trim(), ca=$('nc2').value;
-  if(!t) return toast('Título obrigatório');
+async function saveNota(){
+  const t=$('nt').value.trim(), co=$('nco').value.trim();
   if(!co) return toast('Conteúdo obrigatório');
-  N.unshift({id:Date.now(),titulo:t,conteudo:co,categoria:ca,tipo:'texto',data:fmt()});
-  saveN(); renderN(); renderCats(); closeM('nota');
-  $('nt').value=''; $('nco').value='';
-  toast('Nota guardada'); updCI();
+  const btn=$('btn-save-nota');
+  if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
+  try{
+    const [titulo, categoria] = await Promise.all([
+      t ? Promise.resolve(t) : aiTitulo(co),
+      aiCategoria(co)
+    ]);
+    N.unshift({id:Date.now(),titulo,conteudo:co,categoria,tipo:'texto',data:fmt()});
+    saveN(); renderN(); renderCats(); closeM('nota');
+    $('nt').value=''; $('nco').value='';
+    toast(`✓ Guardado em ${clb(categoria)}`); updCI();
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
+  }
 }
 
 function delN(id){
@@ -1343,12 +1383,22 @@ function prevFoto(input){
   reader.readAsDataURL(file);
 }
 
-function saveFoto(){
+async function saveFoto(){
   if(!fa) return;
-  N.unshift({id:Date.now(),titulo:'Foto — '+fmt(),conteudo:fa,categoria:$('fc').value,tipo:'foto',data:fmt()});
-  saveN(); renderN(); renderCats(); closeM('foto');
-  fb64=''; fa=''; $('fp').style.display='none'; $('fr').classList.remove('on'); $('bsf').disabled=true;
-  updCI(); toast('Foto guardada');
+  const btn=$('bsf');
+  if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
+  try{
+    const [titulo, categoria] = await Promise.all([
+      aiTitulo(fa),
+      aiCategoria(fa)
+    ]);
+    N.unshift({id:Date.now(),titulo,conteudo:fa,categoria,tipo:'foto',data:fmt()});
+    saveN(); renderN(); renderCats(); closeM('foto');
+    fb64=''; fa=''; $('fp').style.display='none'; $('fr').classList.remove('on');
+    updCI(); toast(`✓ Guardado em ${clb(categoria)}`);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
+  }
 }
 
 /* ── Áudio ── */
@@ -1394,11 +1444,22 @@ async function transAudio(){
   finally{ $('at2').style.display='none'; }
 }
 
-function saveAudio(){
+async function saveAudio(){
   if(!at2str) return;
-  const t=$('atu').value.trim()||'Áudio — '+fmt();
-  N.unshift({id:Date.now(),titulo:t,conteudo:at2str,categoria:$('ac').value,tipo:'audio',data:fmt()});
-  saveN(); renderN(); renderCats(); cancelRec(); updCI(); toast('Áudio guardado');
+  const tManual = $('atu').value.trim();
+  const btn=$('bsa');
+  if(btn){ btn.disabled=true; btn.textContent='A analisar...'; }
+  try{
+    const [titulo, categoria] = await Promise.all([
+      tManual ? Promise.resolve(tManual) : aiTitulo(at2str),
+      aiCategoria(at2str)
+    ]);
+    N.unshift({id:Date.now(),titulo,conteudo:at2str,categoria,tipo:'audio',data:fmt()});
+    saveN(); renderN(); renderCats(); cancelRec(); updCI();
+    toast(`✓ Guardado em ${clb(categoria)}`);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Guardar'; }
+  }
 }
 
 function cancelRec(){
